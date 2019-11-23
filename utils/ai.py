@@ -6,23 +6,30 @@ class BasePlayer:
 
     def __init__(self, name="ai"):
         self._position = 0
+        self._drinks = 0
         self._name = name
         self._rps = ['Rock', 'Paper', 'Scissors']  # TODO: Remove the hardcoding
 
     def __str__(self):
         return "{} at {}".format(self._name, self._position)
 
-    def move(self, dice_result: int):
+    def move(self, move_spaces: int, other_players: list):
         """
         Set a new position dependant on the result of a dice roll
 
-        :param dice_result:
-        :return:
+        :param move_spaces: Int value for the number of spaces to move
+        :param other_players: List of all players in the game
+        :return: Players who have just been overtaken
         """
 
-        self._position = self._position + dice_result
+        players_ahead = [player for player in other_players if player.get_position() > self.get_position()]
+
+        self._position = self._position + move_spaces
         self._check_within_limits()
-        return self._position
+
+        players_behind = [player for player in players_ahead if player.get_position() < self.get_position()]
+
+        return players_behind
 
     def get_position(self):
         """
@@ -30,6 +37,10 @@ class BasePlayer:
         :return: Current position on the board
         """
         return self._position
+
+    def take_a_drink(self, drinks=1):
+        self._drinks = self._drinks + drinks
+        return self._drinks
 
     def clash_with(self, player: object):
         """
@@ -73,7 +84,7 @@ class BasePlayer:
         :return: None
         """
 
-        self._position = self._position + 10
+        self.move(10)
         self._check_within_limits(upper_limit=limit)
         return self._position
 
@@ -85,7 +96,7 @@ class BasePlayer:
         :return: None
         """
 
-        self._position = self._position - 10
+        self.move(-10)
         self._check_within_limits(lower_limit=limit)
         return self._position
 
