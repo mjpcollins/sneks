@@ -2,6 +2,7 @@
 
 settings = {
     "board": {
+        "start_number": 0,
         "end_number": 100,
         "dice_config": {
             "number_of_dice": 2,
@@ -11,6 +12,12 @@ settings = {
                 "Rock": "Scissors",
                 "Scissors": "Paper",
                 "Paper": "Rock"
-            }
+            },
+        "players": 4,
+        "snakes_and_ladders": [
+            [2, 20],
+            [4, 10],
+            [80, 15]
+        ]
     }
 }
