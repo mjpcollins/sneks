@@ -4,8 +4,8 @@ This is a project to simulate a drinking game that was invented with a few frien
 myself at university. 
 
 Many drinking games appear to rely more on luck than skill to get people drunk. I
-suppose this is a good thing, as it introduces chaos to pre-dinks rather than one 
-person ending up sober due to skill and others because they're new.
+suppose this is a good thing, as it introduces chaos to pre-drinks rather than one 
+person ending up sober due to skill and others wasted because they're new.
 
 Therefore, Snakes and Ladders is a wonderful candidate for a drinking game. The game
 is based entirely on luck and has basic rules which allows for easy addition of
@@ -24,7 +24,7 @@ optimise the drunkness of the participants.
 Every turn, you roll either a die or some dice. The ultimate aim is to win, 
 the side affect is getting quite drunk.
 
-To win, you must get to square 100. If you over shoot, you bounce. 
+To win, you must get to square 100. If you overshoot, you bounce. 
 For clarification, if one is on square 98 and they roll a 5, they
 will overshoot 100 and bounce back to square 97.
 
@@ -37,11 +37,11 @@ If you land on a ladder, you must climb to wherever the tip of the ladder is loc
 There are 3 basic rules that dictate when you should drink.
 
 1. If you are overtaken by another player, you must take  a drink
-2. If you manage to move up a level (e.g., 9 -> 10 or 26 -> 32), you can instruct another player to take a drink
+2. If you manage to move up a level (e.g., 9 -> 11 or 26 -> 32), you can instruct another player to take a drink
 3. If you land on the same space as another player you must play rock-paper-scissors (RPS) with them. The winner moves directly up (e.g., 33 -> 43, 55 -> 65), and the loser directly down (e.g., 99 -> 89, 14 -> 4)
 
 All interactions between the rules must be observed. If you land on a ladder
-and overtake many people, they must all drink as well in addition to allowing
+and overtake many people, they must all drink in addition to allowing
 you to dictate people to drink. When you move up a level from winning a RPS challenge,
 you are again allowed to dictate someone to drink.
 
