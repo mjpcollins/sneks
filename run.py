@@ -3,6 +3,6 @@ from utils.simulation import play_a_game
 
 settings = load_settings("./config/settings.json")['settings']
 
-r = play_a_game(settings)
+r = play_a_game(settings, report_frequency='end')
 
-print(r)
+print(len(r))

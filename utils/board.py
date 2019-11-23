@@ -30,6 +30,9 @@ class Board:
         s = s + "\n{d} drinks have been consumed in total".format(d=sum(p.get_drinks() for p in self._players))
         return s
 
+    def get_number_of_turns(self):
+        return self._number_of_turns
+
     def _check_snakes_and_ladders(self):
         """
         Check for clashes in locations
