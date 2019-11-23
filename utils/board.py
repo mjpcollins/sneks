@@ -163,4 +163,3 @@ class Board:
         }
         j['players'] = {p._name: {'final_position': p.get_position(),'drinks': p.get_drinks()} for p in self._players}
         return j
-
