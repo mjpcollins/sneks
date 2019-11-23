@@ -33,21 +33,6 @@ class Board:
     def get_number_of_turns(self):
         return self._number_of_turns
 
-    def _check_snakes_and_ladders(self):
-        """
-        Check for clashes in locations
-
-        :return: None
-        """
-        for player in self._players:
-            p = player.get_position()
-            for sl in self._snakes_and_ladders:
-                if p == sl[0]:
-                    ps = player.move(sl[1] - sl[0], self._players)
-                    for pl in ps:
-                        pl.take_a_drink()
-                    break
-
     def add_player(self, player: BasePlayer):
         """
         Add a player to the board
@@ -57,6 +42,19 @@ class Board:
         """
         self._players.append(player)
         self.reset_register()
+
+    def _check_snakes_and_ladders(self):
+        """
+        Check for snakes and ladders, move to the locations dictated by the chart.
+
+        :return: None
+        """
+        for idx, player in enumerate(self._players):
+            p = player.get_position()
+            for sl in self._snakes_and_ladders:
+                if p == sl[0]:
+                    self._register_of_locations[idx] = player.move(sl[1] - sl[0], self._players)
+                    break
 
     def _update_registry(self):
         self._register_of_locations = np.array([p.get_position() for p in self._players])
@@ -69,22 +67,15 @@ class Board:
         """
 
         # Loop through each of the players in the order they were added to the board
-        for i, p in enumerate(self._players):
+        for idx, player in enumerate(self._players):
+
+            # Update the length of the game
             self.action_time(self._turn_time_per_person)
-            res = sum(roll_dice(**self._dice_config))
 
-            p1 = int(str(p.get_position())[0])
+            # Roll the dice, move the player, and update the register
+            self._register_of_locations[idx] = player.move(sum(roll_dice(**self._dice_config)), self._players)
 
-            # update the register and check for snakes and ladders
-            p.move(res, self._players)
-            self._register_of_locations[i] = p.get_position()
-            self._check_snakes_and_ladders()
-
-            p2 = int(str(p.get_position())[0])
-
-            for _ in range(p2 - p1):
-                self.delegate_a_drink(p)
-
+            # Resolve the complicated stuff
             self._resolve_board_changes()
 
         self._number_of_turns = self._number_of_turns + 1
@@ -113,33 +104,16 @@ class Board:
 
                         # For the winner, the spoils
                         a['winner'].move_up(limit=self._end_number, players=self._players)
-                        self.delegate_a_drink(a['winner'])
 
                         # For the loser, drinks
                         a['loser'].move_down(limit=self._start_number, players=self._players)
-                        a['loser'].take_a_drink()
 
                         self._update_registry()
                         self.action_time(self._rps_time)
 
-            temp_list = self._register_of_locations[np.where(self._register_of_locations != 0)]
-
             self._check_snakes_and_ladders()
 
-    def delegate_a_drink(self, player):
-        """
-        Pick a random player and delegate a drink. Make sure not to pick self. (Though, within the rules that is legal.)
-
-        Grudges are not implemented. TODO: Implement grudges. (Sounds like game theory?)
-
-        :param player: Player giving a drink
-        :return: None
-        """
-
-        p = random.choice(self._players)
-        while p != player:
-            p = random.choice(self._players)
-        p.take_a_drink()
+            temp_list = self._register_of_locations[np.where(self._register_of_locations != 0)]
 
     def get_list_of_players(self):
         return self._players
