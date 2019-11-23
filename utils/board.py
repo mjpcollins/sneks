@@ -12,16 +12,22 @@ class Board:
         self._end_number = kwargs['end_number']
         self._start_number = kwargs['start_number']
         self._snakes_and_ladders = kwargs['snakes_and_ladders']
+        self._turn_time_per_person = kwargs['turn_time_per_person']
+        self._rps_time = kwargs['rps_time']
         self._players = []
         self._register_of_locations = None
         self._matrix = kwargs['rps_matrix']
         self._number_of_turns = 0
+        self._length_of_game = 0
 
     def __str__(self):
-        s = "Current state of board:\n-----------------------"
+        s = "\nCurrent state of board:\n-----------------------"
         for p in self._players:
             s = s + "\n{p}".format(p=str(p))
+        s = s + "\n-----------------------"
         s = s + "\nCurrently on turn {n}".format(n=self._number_of_turns)
+        s = s + "\nGame has taken {m} minutes so far".format(m=round(self._length_of_game / 60, 1))
+        s = s + "\n{d} drinks have been consumed in total".format(d=sum(p.get_drinks() for p in self._players))
         return s
 
     def _check_snakes_and_ladders(self):
@@ -36,7 +42,7 @@ class Board:
                 if p == sl[0]:
                     ps = player.move(sl[1] - sl[0], self._players)
                     for pl in ps:
-                        ps.take_a_drink()
+                        pl.take_a_drink()
                     break
 
     def add_player(self, player: BasePlayer):
@@ -61,12 +67,13 @@ class Board:
 
         # Loop through each of the players in the order they were added to the board
         for i, p in enumerate(self._players):
+            self.action_time(self._turn_time_per_person)
             res = sum(roll_dice(**self._dice_config))
 
             p1 = int(str(p.get_position())[0])
 
             # update the register and check for snakes and ladders
-            p.move(res)
+            p.move(res, self._players)
             self._register_of_locations[i] = p.get_position()
             self._check_snakes_and_ladders()
 
@@ -78,6 +85,9 @@ class Board:
             self._resolve_board_changes()
 
         self._number_of_turns = self._number_of_turns + 1
+
+    def action_time(self, seconds):
+        self._length_of_game = self._length_of_game + seconds
 
     def _resolve_board_changes(self):
         """
@@ -99,20 +109,19 @@ class Board:
                         a = rock_paper_scissors(p, pl, self._matrix)
 
                         # For the winner, the spoils
-                        a['winner'].move_up(limit=self._end_number)
+                        a['winner'].move_up(limit=self._end_number, players=self._players)
                         self.delegate_a_drink(a['winner'])
 
                         # For the loser, drinks
-                        a['loser'].move_down(limit=self._start_number)
+                        a['loser'].move_down(limit=self._start_number, players=self._players)
                         a['loser'].take_a_drink()
 
                         self._update_registry()
+                        self.action_time(self._rps_time)
 
             temp_list = self._register_of_locations[np.where(self._register_of_locations != 0)]
 
             self._check_snakes_and_ladders()
-
-
 
     def delegate_a_drink(self, player):
         """
@@ -145,4 +154,13 @@ class Board:
     def reset_register(self):
         self._register_of_locations = np.array([0 for _ in range(len(self._players))])
 
+    def generate_report(self):
+        j = dict()
+        j['board'] = {
+            'turns': self._number_of_turns,
+            'game_seconds': self._length_of_game,
+            'drinks': sum(p.get_drinks() for p in self._players)
+        }
+        j['players'] = {p._name: {'final_position': p.get_position(),'drinks': p.get_drinks()} for p in self._players}
+        return j
 

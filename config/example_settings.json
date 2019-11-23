@@ -1,6 +1,4 @@
-
-
-settings = {
+{"settings": {
     "board": {
         "start_number": 0,
         "end_number": 100,
@@ -22,4 +20,4 @@ settings = {
         "turn_time_per_person": 25,
         "rps_time": 25
     }
-}
+}}

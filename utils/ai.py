@@ -11,7 +11,7 @@ class BasePlayer:
         self._rps = ['Rock', 'Paper', 'Scissors']  # TODO: Remove the hardcoding
 
     def __str__(self):
-        return "{} at {}".format(self._name, self._position)
+        return "{} at {} and has had {} drinks".format(self._name, self._position, self._drinks)
 
     def move(self, move_spaces: int, other_players: list):
         """
@@ -30,6 +30,9 @@ class BasePlayer:
         players_behind = [player for player in players_ahead if player.get_position() < self.get_position()]
 
         return players_behind
+
+    def get_drinks(self):
+        return self._drinks
 
     def get_position(self):
         """
@@ -76,27 +79,29 @@ class BasePlayer:
         if self._position < lower_limit:
             self._position = lower_limit
 
-    def move_up(self, limit=100):
+    def move_up(self, players, limit=100):
         """
         Knock the player up a level
 
+        :param players: Other player objects on the board
         :param limit: The max value on the board
         :return: None
         """
 
-        self.move(10)
+        self.move(10, players)
         self._check_within_limits(upper_limit=limit)
         return self._position
 
-    def move_down(self, limit=0):
+    def move_down(self, players, limit=0):
         """
         Knock the player down a level
 
+        :param players: Other player objects on the board
         :param limit: The min value on the board
         :return: None
         """
 
-        self.move(-10)
+        self.move(-10, players)
         self._check_within_limits(lower_limit=limit)
         return self._position
 

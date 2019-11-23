@@ -1,5 +1,6 @@
 
 import random
+import json
 
 
 def roll_dice(number_of_dice=2, sides_of_dice=6):
@@ -36,3 +37,11 @@ def rock_paper_scissors(ai1: object, ai2: object, matrix: dict):
 
     return w
 
+
+def load_settings(path):
+    """
+    Take a given json file of the settings and load it to memory
+    :param path: Path to the json file
+    :return: dict of the settings
+    """
+    return json.load(open(path, 'r'))
