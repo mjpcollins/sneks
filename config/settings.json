@@ -19,5 +19,8 @@
         ],
         "turn_time_per_person": 25,
         "rps_time": 25
+    },
+    "players": {
+        "number_of_players": 4
     }
 }}
