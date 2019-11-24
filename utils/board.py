@@ -122,10 +122,10 @@ class Board:
                         a = rock_paper_scissors(p, pl, self._matrix)
 
                         # For the winner, the spoils
-                        a['winner'].move_up(board=self)
+                        a['winner'].move(10, board=self)
 
                         # For the loser, the drinks
-                        a['loser'].move_down(board=self)
+                        a['loser'].move(-10, board=self)
 
                         self._update_registry()
                         self._action_time(self._rps_time)

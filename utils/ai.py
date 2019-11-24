@@ -145,28 +145,4 @@ class BasePlayer:
         if self._position < lower_limit:
             self._position = lower_limit
 
-    def move_up(self, board):
-        """
-        Knock the player up a level
-
-        :param players: Other player objects on the board
-        :param limit: The max value on the board
-        :return: None
-        """
-
-        self.move(10, board)
-        return self._position
-
-    def move_down(self, board):
-        """
-        Knock the player down a level
-
-        :param players: Other player objects on the board
-        :param limit: The min value on the board
-        :return: None
-        """
-
-        self.move(-10, board)
-        return self._position
-
 
