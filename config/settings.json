@@ -11,7 +11,6 @@
                 "Scissors": "Paper",
                 "Paper": "Rock"
             },
-        "players": 4,
         "snakes_and_ladders": [
             [2, 20],
             [4, 10],
@@ -21,6 +20,6 @@
         "rps_time": 25
     },
     "players": {
-        "number_of_players": 4
+        "number_of_players": 10
     }
 }}

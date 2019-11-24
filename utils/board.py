@@ -2,7 +2,6 @@
 from utils.utils import roll_dice, rock_paper_scissors
 from utils.ai import BasePlayer
 import numpy as np
-import random
 
 
 class Board:
@@ -15,7 +14,7 @@ class Board:
         self._turn_time_per_person = kwargs['turn_time_per_person']
         self._rps_time = kwargs['rps_time']
         self._players = []
-        self._register_of_locations = None
+        self._register_of_locations = self._reset_register()
         self._matrix = kwargs['rps_matrix']
         self._number_of_turns = 0
         self._length_of_game = 0
@@ -41,23 +40,7 @@ class Board:
         :return: None
         """
         self._players.append(player)
-        self.reset_register()
-
-    def _check_snakes_and_ladders(self):
-        """
-        Check for snakes and ladders, move to the locations dictated by the chart.
-
-        :return: None
-        """
-        for idx, player in enumerate(self._players):
-            p = player.get_position()
-            for sl in self._snakes_and_ladders:
-                if p == sl[0]:
-                    self._register_of_locations[idx] = player.move(sl[1] - sl[0], self._players)
-                    break
-
-    def _update_registry(self):
-        self._register_of_locations = np.array([p.get_position() for p in self._players])
+        self._reset_register()
 
     def take_turn(self):
         """
@@ -70,22 +53,58 @@ class Board:
         for idx, player in enumerate(self._players):
 
             # Update the length of the game
-            self.action_time(self._turn_time_per_person)
+            self._action_time(self._turn_time_per_person)
 
             # Roll the dice, move the player, and update the register
-            self._register_of_locations[idx] = player.move(sum(roll_dice(**self._dice_config)), self._players)
+            dice_roll = sum(roll_dice(**self._dice_config))
+            player.move(dice_roll, board=self)
+            self._update_registry()
 
             # Resolve the complicated stuff
             self._resolve_board_changes()
 
         self._number_of_turns = self._number_of_turns + 1
 
-    def action_time(self, seconds):
-        self._length_of_game = self._length_of_game + seconds
+    def get_list_of_players(self):
+        return self._players
+
+    def check_for_winners(self):
+        if self._end_number in self._register_of_locations:
+            i = np.where(self._register_of_locations == self._end_number)
+            return self._players
+        else:
+            return False
+
+    def info_on_players(self):
+        return {p: p.get_position() for p in self._players}
+
+    def generate_report(self):
+        j = dict()
+        j['board'] = {
+            'turns': self._number_of_turns,
+            'game_seconds': self._length_of_game,
+            'drinks': sum(p.get_drinks() for p in self._players)
+        }
+        j['players'] = {p._name: {'position': p.get_position(),'drinks': p.get_drinks()} for p in self._players}
+        return j
+
+    def _check_snakes_and_ladders(self):
+        """
+        Check for snakes and ladders, move to the locations dictated by the chart.
+
+        :return: None
+        """
+        for idx, player in enumerate(self._players):
+            p = player.get_position()
+            for sl in self._snakes_and_ladders:
+                if p == sl[0]:
+                    player.move(sl[1] - sl[0], self)
+                    self._update_registry()
+                    break
 
     def _resolve_board_changes(self):
         """
-        Check for any changes that need to be resolved
+        Check for any changes that need to be resolved. Loops resolving RPS & S&L until everyone's position is unique
 
         :return: None
         """
@@ -103,40 +122,24 @@ class Board:
                         a = rock_paper_scissors(p, pl, self._matrix)
 
                         # For the winner, the spoils
-                        a['winner'].move_up(limit=self._end_number, players=self._players)
+                        a['winner'].move_up(board=self)
 
-                        # For the loser, drinks
-                        a['loser'].move_down(limit=self._start_number, players=self._players)
+                        # For the loser, the drinks
+                        a['loser'].move_down(board=self)
 
                         self._update_registry()
-                        self.action_time(self._rps_time)
+                        self._action_time(self._rps_time)
 
-            self._check_snakes_and_ladders()
+                        self._check_snakes_and_ladders()
 
             temp_list = self._register_of_locations[np.where(self._register_of_locations != 0)]
 
-    def get_list_of_players(self):
-        return self._players
+    def _update_registry(self):
+        self._register_of_locations = np.array([p.get_position() for p in self._players])
 
-    def info_on_players(self):
-        return {p: p.get_position() for p in self._players}
+    def _action_time(self, seconds):
+        self._length_of_game = self._length_of_game + seconds
 
-    def check_for_winners(self):
-        if self._end_number in self._register_of_locations:
-            i = np.where(self._register_of_locations == self._end_number)
-            return self._players
-        else:
-            return False
-
-    def reset_register(self):
+    def _reset_register(self):
         self._register_of_locations = np.array([0 for _ in range(len(self._players))])
-
-    def generate_report(self):
-        j = dict()
-        j['board'] = {
-            'turns': self._number_of_turns,
-            'game_seconds': self._length_of_game,
-            'drinks': sum(p.get_drinks() for p in self._players)
-        }
-        j['players'] = {p._name: {'final_position': p.get_position(),'drinks': p.get_drinks()} for p in self._players}
-        return j
+        return self._register_of_locations

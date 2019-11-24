@@ -3,6 +3,7 @@ from utils.simulation import play_a_game
 
 settings = load_settings("./config/settings.json")['settings']
 
-r = play_a_game(settings, report_frequency='end')
+r = play_a_game(settings, report_frequency='turn')
 
-print(len(r))
+for t in r:
+    print(r[t])

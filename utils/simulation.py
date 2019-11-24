@@ -18,6 +18,7 @@ def play_a_game(settings, snakes_and_ladders=False, report_frequency='end'):
         settings['board']['snakes_and_ladders'] = snakes_and_ladders
 
     b = Board(**settings['board'])
+
     for i in range(settings['players']['number_of_players']):
         p = BasePlayer("ai{}".format(i))
         b.add_player(p)
