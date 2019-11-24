@@ -73,7 +73,11 @@ class BasePlayer:
             if starting_level > current_level:
                 self.take_a_drink(starting_level - current_level)
 
-        return self._position, board.check_for_winners()
+        board._update_registry()
+
+        board._check_snakes_and_ladders()
+
+        return self._position
 
     def get_drinks(self):
         return self._drinks
@@ -104,20 +108,25 @@ class BasePlayer:
             p = random.choice(players)
         p.take_a_drink()
 
-    def clash_with(self, player: object):
+    def clash_with(self, player: object, min_loc: int=0):
         """
         Check whether or not this player clashes with the given player object
+
+        If a self is located at min_loc, skip.
 
         :param player: Player to check the object with
         :return: Boolean on whether or not the clash
         """
+
+        if self.get_position() == min_loc:
+            return False
 
         try:
             assert self != player
         except:
             return False
 
-        if player.get_position() == self.get_position():
+        if self.get_position() == player.get_position():
             return True
         return False
 

@@ -3,6 +3,27 @@ from utils.utils import roll_dice, rock_paper_scissors
 from utils.ai import BasePlayer
 import numpy as np
 
+#
+# Decorator
+#
+
+
+def game_over_check(func):
+
+    def function_wrapper(*args):
+
+        # If the game has been won, prevent any further functions being run
+        if args[0].check_for_winners():
+            return None
+        else:
+            return func(*args)
+
+    return function_wrapper
+
+#
+# Class
+#
+
 
 class Board:
 
@@ -13,8 +34,10 @@ class Board:
         self._snakes_and_ladders = kwargs['snakes_and_ladders']
         self._turn_time_per_person = kwargs['turn_time_per_person']
         self._rps_time = kwargs['rps_time']
+        self._snl_time = kwargs['snl_time']
         self._players = []
-        self._register_of_locations = self._reset_register()
+        self._game_is_over = False
+        self._register_of_locations = self._update_registry()
         self._matrix = kwargs['rps_matrix']
         self._number_of_turns = 0
         self._length_of_game = 0
@@ -40,8 +63,9 @@ class Board:
         :return: None
         """
         self._players.append(player)
-        self._reset_register()
+        self._update_registry()
 
+    @game_over_check
     def take_turn(self):
         """
         Simulate one turn on the board
@@ -55,25 +79,23 @@ class Board:
             # Update the length of the game
             self._action_time(self._turn_time_per_person)
 
-            # Roll the dice, move the player, and update the register
-            dice_roll = sum(roll_dice(**self._dice_config))
-            player.move(dice_roll, board=self)
-            self._update_registry()
+            # Roll the dice, move the player
+            player.move(sum(roll_dice(**self._dice_config)), board=self)
 
             # Resolve the complicated stuff
             self._resolve_board_changes()
 
         self._number_of_turns = self._number_of_turns + 1
 
-    def get_list_of_players(self):
-        return self._players
-
     def check_for_winners(self):
         if self._end_number in self._register_of_locations:
             i = np.where(self._register_of_locations == self._end_number)
-            return self._players
-        else:
-            return False
+            self._game_is_over = True
+
+        return self._game_is_over
+
+    def get_list_of_players(self):
+        return self._players
 
     def info_on_players(self):
         return {p: p.get_position() for p in self._players}
@@ -88,28 +110,28 @@ class Board:
         j['players'] = {p._name: {'position': p.get_position(),'drinks': p.get_drinks()} for p in self._players}
         return j
 
+    @game_over_check
     def _check_snakes_and_ladders(self):
         """
-        Check for snakes and ladders, move to the locations dictated by the chart.
+        Check for snakes and ladders, move to the locations dictated by the matrix.
 
         :return: None
         """
         for idx, player in enumerate(self._players):
-            p = player.get_position()
             for sl in self._snakes_and_ladders:
-                if p == sl[0]:
+                if sl[0] == player.get_position():
                     player.move(sl[1] - sl[0], self)
-                    self._update_registry()
+                    self._action_time(self._snl_time)
+                    # Assume that no one is chaining together snakes and ladders. Please don't do that.
                     break
 
+    @game_over_check
     def _resolve_board_changes(self):
         """
-        Check for any changes that need to be resolved. Loops resolving RPS & S&L until everyone's position is unique
+        Check for any changes that need to be resolved. Loops resolving RPS until everyone's position is unique
 
         :return: None
         """
-
-        self._check_snakes_and_ladders()
 
         # Check for any location clashes
         temp_list = self._register_of_locations[np.where(self._register_of_locations != 0)]
@@ -117,7 +139,7 @@ class Board:
             # This is very greedy, should be reduced to only check that which has changed.
             for p in self._players:
                 for pl in self._players:
-                    if p.clash_with(pl):
+                    if p.clash_with(pl, min_loc=self._start_number):
 
                         a = rock_paper_scissors(p, pl, self._matrix)
 
@@ -127,19 +149,23 @@ class Board:
                         # For the loser, the drinks
                         a['loser'].move(-10, board=self)
 
-                        self._update_registry()
                         self._action_time(self._rps_time)
-
-                        self._check_snakes_and_ladders()
 
             temp_list = self._register_of_locations[np.where(self._register_of_locations != 0)]
 
     def _update_registry(self):
+        """
+        Update the registry for all current locations of players. Registry could be removed, but might make
+        other parts less obvious in logic.
+
+        :return: Current register
+        """
+
         self._register_of_locations = np.array([p.get_position() for p in self._players])
+        self.check_for_winners()
+        return self._register_of_locations
 
     def _action_time(self, seconds):
         self._length_of_game = self._length_of_game + seconds
 
-    def _reset_register(self):
-        self._register_of_locations = np.array([0 for _ in range(len(self._players))])
-        return self._register_of_locations
+

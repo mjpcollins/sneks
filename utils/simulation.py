@@ -47,3 +47,8 @@ def play_a_game(settings, snakes_and_ladders=False, report_frequency='end'):
     return final_report
 
 
+def run_n_games(settings, n=10):
+    report = dict()
+    for game in range(n):
+        report[game] = play_a_game(settings)['board']
+    return report

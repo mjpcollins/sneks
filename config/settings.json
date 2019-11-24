@@ -17,9 +17,10 @@
             [80, 15]
         ],
         "turn_time_per_person": 25,
-        "rps_time": 25
+        "rps_time": 25,
+        "snl_time": 5
     },
     "players": {
-        "number_of_players": 10
+        "number_of_players": 7
     }
 }}
