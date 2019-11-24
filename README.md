@@ -38,6 +38,7 @@ There are 3 basic rules that dictate when you should drink.
 
 1. If you are overtaken by another player, you must take  a drink
 2. If you manage to move up a level (e.g., 9 -> 11 or 26 -> 32), you can instruct another player to take a drink
+(conversly, if you move down a level, you must take a drink).
 3. If you land on the same space as another player you must play rock-paper-scissors (RPS) with them. The winner moves directly up (e.g., 33 -> 43, 55 -> 65), and the loser directly down (e.g., 99 -> 89, 14 -> 4)
 
 All interactions between the rules must be observed. If you land on a ladder
