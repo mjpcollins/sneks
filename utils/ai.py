@@ -38,8 +38,8 @@ class BasePlayer:
             players_behind = [player for player in players_ahead if player.get_position() < self.get_position()]
 
             # Silly people who were overtaken. They're too slow!
-            for p in players_behind:
-                p.take_a_drink()
+            for player in players_behind:
+                player.take_a_drink()
 
             if self._position < 10:
                 current_level = board._start_number
@@ -64,6 +64,7 @@ class BasePlayer:
             for _ in players_ahead:
                 self.take_a_drink()
 
+            # Make sure we're not off the board
             if self._position < 10:
                 current_level = board._start_number
             else:
@@ -103,10 +104,10 @@ class BasePlayer:
         :return: None
         """
 
-        p = random.choice(players)
-        while p != self:
-            p = random.choice(players)
-        p.take_a_drink()
+        player = random.choice(players)
+        while player != self:
+            player = random.choice(players)
+        player.take_a_drink()
 
     def clash_with(self, player: object, min_loc: int=0):
         """

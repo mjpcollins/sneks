@@ -13,7 +13,7 @@ def game_over_check(func):
     def function_wrapper(*args):
 
         # If the game has been won, prevent any further functions being run
-        if args[0].check_for_winners():
+        if args[0].is_game_over():
             return None
         else:
             return func(*args)
@@ -44,13 +44,13 @@ class Board:
 
     def __str__(self):
         s = "\nCurrent state of board:\n-----------------------"
-        for p in self.get_list_of_players():
-            s = s + "\n{p}".format(p=str(p))
+        for player in self.get_list_of_players():
+            s = s + "\n{p}".format(p=str(player))
         s = s + "\n-----------------------"
         s = s + "\nCurrently on turn {n}".format(n=self._number_of_turns)
         s = s + "\nGame has taken {m} minutes so far".format(m=round(self._length_of_game / 60, 1))
-        s = s + "\n{d} drinks have been consumed in total".format(d=sum(p.get_drinks()
-                                                                        for p in self.get_list_of_players()))
+        s = s + "\n{d} drinks have been consumed in total".format(d=sum(player.get_drinks()
+                                                                        for player in self.get_list_of_players()))
         return s
 
     def get_number_of_turns(self):
@@ -75,24 +75,27 @@ class Board:
         """
 
         # Loop through each of the players in the order they were added to the board
-        for idx, player in enumerate(self.get_list_of_players()):
+        for player in self.get_list_of_players():
 
-            # Update the length of the game
-            self._action_time(self._turn_time_per_person)
+            # Although the decorator checks on run of the function, this will prevent further movement in win occurs
+            if not self.check_for_winners():
 
-            # Roll the dice, move the player
-            player.move(sum(roll_dice(**self._dice_config)), board=self)
+                # Update the length of the game
+                self._action_time(self._turn_time_per_person)
 
-            # Resolve the complicated stuff
-            self._resolve_board_changes()
+                # Roll the dice, move the player
+                player.move(sum(roll_dice(**self._dice_config)), board=self)
+
+                # Resolve the complicated stuff
+                self._resolve_board_changes()
 
         self._number_of_turns = self._number_of_turns + 1
 
     def check_for_winners(self):
-        if self._end_number in self._register_of_locations:
-            i = np.where(self._register_of_locations == self._end_number)
-            self._game_is_over = True
+        self._game_is_over = self._end_number in self._register_of_locations
+        return self._game_is_over
 
+    def is_game_over(self):
         return self._game_is_over
 
     def get_list_of_players(self):
@@ -103,10 +106,10 @@ class Board:
         j['board'] = {
             'turns': self._number_of_turns,
             'game_seconds': self._length_of_game,
-            'drinks': sum(p.get_drinks() for p in self.get_list_of_players())
+            'drinks': sum(player.get_drinks() for player in self.get_list_of_players())
         }
-        j['players'] = {p._name: {'position': p.get_position(),'drinks': p.get_drinks()}
-                        for p in self.get_list_of_players()}
+        j['players'] = {player._name: {'position': player.get_position(),'drinks': player.get_drinks()}
+                        for player in self.get_list_of_players()}
         return j
 
     @game_over_check
@@ -116,12 +119,12 @@ class Board:
 
         :return: None
         """
-        for idx, player in enumerate(self.get_list_of_players()):
-            for sl in self._snakes_and_ladders:
-                if sl[0] == player.get_position():
-                    player.move(sl[1] - sl[0], self)
+        for player in self.get_list_of_players():
+            for snake_or_ladder in self._snakes_and_ladders:
+                if snake_or_ladder[0] == player.get_position():
+                    player.move(snake_or_ladder[1] - snake_or_ladder[0], self)
                     self._action_time(self._snl_time)
-                    # Assume that no one is chaining together snakes and ladders. Please don't do that.
+                    # I assume that no one is chaining together snakes or ladders. Please don't do that.
                     break
 
     @game_over_check
@@ -132,26 +135,26 @@ class Board:
         :return: None
         """
 
-        # Check for any location clashes
-        temp_list = self._register_of_locations[np.where(self._register_of_locations != 0)]
-        ps = self.get_list_of_players()
-        while len(temp_list) > len(np.unique(temp_list)):
+        # Loop while location clashes exist
+        while self.check_for_clashes():
             # This is very greedy, should be reduced to only check that which has changed.
-            for p1 in ps:
-                for p2 in ps:
-                    if p1.clash_with(p2, min_loc=self._start_number):
+            for player1 in self.get_list_of_players():
+                for player2 in self.get_list_of_players():
+                    if player1.clash_with(player2, min_loc=self._start_number):
 
-                        a = rock_paper_scissors(p1, p2, self._matrix)
+                        result = rock_paper_scissors(player1, player2, self._matrix)
 
                         # For the winner, the spoils
-                        a['winner'].move(10, board=self)
+                        result['winner'].move(10, board=self)
 
                         # For the loser, the drinks
-                        a['loser'].move(-10, board=self)
+                        result['loser'].move(-10, board=self)
 
                         self._action_time(self._rps_time)
 
-            temp_list = self._register_of_locations[np.where(self._register_of_locations != 0)]
+    def check_for_clashes(self):
+        temp_list = self._register_of_locations[np.where(self._register_of_locations != 0)]
+        return len(temp_list) > len(np.unique(temp_list))
 
     def _update_registry(self):
         """
@@ -161,7 +164,7 @@ class Board:
         :return: Current register
         """
 
-        self._register_of_locations = np.array([p.get_position() for p in self.get_list_of_players()])
+        self._register_of_locations = np.array([player.get_position() for player in self.get_list_of_players()])
         self.check_for_winners()
         return self._register_of_locations
 
